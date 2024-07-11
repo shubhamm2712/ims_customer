@@ -8,6 +8,8 @@ from ..config.logger_config import logger
 
 from ..models.models import Customer
 
+from ..service import add_customer_service, del_customer_service, get_customer_service
+
 from ..utils.auth_validation import VerifyToken
 from ..utils.req_body_validation import add_validator, del_validator
 from ..utils.utils import set_org_model
@@ -20,7 +22,7 @@ auth = VerifyToken()
 async def add_customer(customer: Customer = Depends(add_validator), auth_result: dict = Security(auth.verify)) -> List[Customer]:
     set_org_model(customer, auth_result)
     logger.debug("In add_customer:" + str(customer))
-    # add_product_service.add_product(product)
+    add_customer_service.add_customer(customer)
     customers = await get_customers(auth_result)
     return customers
 
@@ -28,7 +30,7 @@ async def add_customer(customer: Customer = Depends(add_validator), auth_result:
 async def delete_customer(customer: Customer = Depends(del_validator), auth_result: dict = Security(auth.verify)) -> List[Customer]:
     set_org_model(customer, auth_result)
     logger.debug("In delete_customer:" + str(customer))
-    # add_product_service.add_product(product)
+    del_customer_service.del_customer(customer)
     customers = await get_customers(auth_result)
     return customers
 
@@ -36,5 +38,5 @@ async def delete_customer(customer: Customer = Depends(del_validator), auth_resu
 async def get_customers(auth_result: dict = Security(auth.verify)) -> List[Customer]:
     customer = set_org_model(Customer(), auth_result)
     logger.debug("In get_customers:" + str(customer))
-    customers = []# add_product_service.add_product(product)
+    customers = get_customer_service.get_customers(customer)
     return customers

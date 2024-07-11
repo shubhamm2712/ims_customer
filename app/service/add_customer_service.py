@@ -1,5 +1,7 @@
 from ..config.consts import ID_NOT_FOUND
 
+from ..database import db_ops
+
 from ..exceptions.invalid_body_exceptions import InvalidBodyException
 
 from ..models.models import Customer
@@ -10,15 +12,14 @@ def is_update(customer: Customer) -> bool:
     return False
 
 def validate_update_customer(customer: Customer) -> None:
-    # Check if id is in db or not
-    raise InvalidBodyException(ID_NOT_FOUND)
-    return 
+    cust_ids = db_ops.get_customer_ids(customer)
+    if customer.id not in cust_ids:
+        raise InvalidBodyException(ID_NOT_FOUND)
 
 def add_customer(customer: Customer) -> None:
     isUpdate = is_update(customer)
     if isUpdate:
         validate_update_customer(customer)
-        # update
+        db_ops.update_customer(customer)
     else:
-        # add
-        pass
+        db_ops.add_customer(customer)
