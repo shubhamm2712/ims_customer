@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -37,3 +37,9 @@ class Broker(SQLModel, table=True):
         self.org = broker.org
         self.name = broker.name
         self.phone = broker.phone
+
+class SingleEntity(SQLModel):
+    customer: Optional[Customer] = None
+    broker: Optional[Broker] = None
+    customers: List[Customer] = []
+    brokers: List[Broker] = []

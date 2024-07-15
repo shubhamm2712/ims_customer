@@ -1,6 +1,6 @@
 from typing import Union
 
-from ..config.consts import NAME_NOT_FOUND, ID_NOT_FOUND, INVALID_PRODUCT_DETAILS_TYPE
+from ..config.consts import NAME_NOT_FOUND, ID_NOT_FOUND, INVALID_PRODUCT_DETAILS_TYPE, CUSTOMER_DETAILS_MISSING, BROKER_DETAILS_MISSING
 from ..models.models import Customer, Broker
 from ..exceptions.invalid_body_exceptions import InvalidBodyException
 
@@ -55,21 +55,53 @@ def sanitize_broker(broker: Broker) -> None:
             broker.phone = broker.phone.strip()
             if broker.phone == "":
                 broker.phone = None
-    
-def sanitize(cust_brok : Union[Customer, Broker]) -> None:
-    if type(cust_brok) == Customer:
-        sanitize_customer(cust_brok)
-    else:
-        sanitize_broker(cust_brok)
 
 def add_validator(cust_brok: Union[Customer, Broker]) -> Union[Customer, Broker]:
-    sanitize(cust_brok)
     if cust_brok.name is None:
         raise InvalidBodyException(NAME_NOT_FOUND)
     return cust_brok
 
-def del_validator(cust_brok: Union[Customer, Broker]) -> Union[Customer, Broker]:
-    sanitize(cust_brok)
+def add_valid_broker(broker: Broker) -> Union[Customer, Broker]:
+    sanitize_broker(broker)
+    return add_validator(broker)
+
+def add_valid_customer(customer: Customer) -> Union[Customer, Broker]:
+    sanitize_customer(customer)
+    return add_validator(customer)
+
+def validator(cust_brok: Union[Customer, Broker]) -> Union[Customer, Broker]:
     if cust_brok.id is None:
         raise InvalidBodyException(ID_NOT_FOUND)
     return cust_brok
+
+def valid_broker(broker: Broker) -> Union[Customer, Broker]:
+    sanitize_broker(broker)
+    return validator(broker)
+
+def valid_customer(customer: Customer) -> Union[Customer, Broker]:
+    sanitize_customer(customer)
+    return validator(customer)
+
+def add_link_customer_validator(customer: Customer) -> Customer:
+    sanitize_customer(customer)
+    if customer.id is None and customer.name is None:
+        raise InvalidBodyException(CUSTOMER_DETAILS_MISSING)
+    return customer
+
+def add_link_broker_validator(broker: Broker) -> Broker:
+    sanitize_broker(broker)
+    if broker.id is None and broker.name is None:
+        raise InvalidBodyException(BROKER_DETAILS_MISSING)
+    return broker
+
+def del_link_customer_validator(customer: Customer) -> Customer:
+    sanitize_customer(customer)
+    if customer.id is None:
+        raise InvalidBodyException(CUSTOMER_DETAILS_MISSING)
+    return customer
+
+def del_link_broker_validator(broker: Broker) -> Broker:
+    sanitize_broker(broker)
+    if broker.id is None:
+        raise InvalidBodyException(BROKER_DETAILS_MISSING)
+    return broker
