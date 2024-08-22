@@ -5,12 +5,12 @@ from typing import Optional
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from ..config.config import get_settings
-from ..exceptions.auth_exception import UnauthenticatedException, UnauthorizedException
+from ..config import get_auth_settings
+from ..exceptions import UnauthenticatedException, UnauthorizedException
 
 class VerifyToken:
     def __init__(self):
-        self.config = get_settings()
+        self.config = get_auth_settings()
         jwks_url = f'https://{self.config.auth0_domain}/.well-known/jwks.json'
         self.jwks_client = jwt.PyJWKClient(jwks_url)
 
@@ -37,6 +37,7 @@ class VerifyToken:
                 audience=self.config.auth0_api_audience,
                 issuer=self.config.auth0_issuer,
             )
+            payload["token"] = token
         except Exception as error:
             raise UnauthorizedException(str(error))
         

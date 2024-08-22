@@ -1,63 +1,97 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi import Depends, Security
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from ..config.consts import PATH_PREFIX_CUSTOMER, POST_ADD_CUSTOMER, POST_DELETE_CUSTOMER, GET_CUSTOMERS, GET_CUSTOMER
-from ..config.logger_config import logger
+from ..config import logger
+from ..config.consts import PATH_PREFIX_CUSTOMER, CustomerRoutes, ORG
 
-from ..models.models import Customer, Broker, SingleEntity
+from ..models.models import Customer, ExceptionClass
 
-from ..service import add_customer_service, del_customer_service, get_customer_service, link_service
+from ..service import CreateCustomerService, ReadCustomerService, UpdateCustomerService, DeleteCustomerService
 
-from ..utils.auth_validation import VerifyToken
-from ..utils.req_body_validation import add_valid_customer, valid_customer, add_link_broker_validator, add_link_customer_validator, del_link_broker_validator, del_link_customer_validator
-from ..utils.utils import set_org_model
+from ..utils import VerifyToken, CustomerValidators, set_org_model, set_org_multiple_model
 
 apiRouter = APIRouter(prefix=PATH_PREFIX_CUSTOMER)
 auth = VerifyToken()
 
-# Customers
-@apiRouter.post(POST_ADD_CUSTOMER, response_model=SingleEntity)
-async def add_customer(customer: Customer = Depends(add_valid_customer), auth_result: dict = Security(auth.verify)) -> SingleEntity:
+bad_request_responses = {
+    400: {
+        "description": "Error: Bad Request",
+        "model": ExceptionClass
+    }
+}
+
+auth_responses = {
+    401: {
+        "description": "Error: Unauthorized",
+        "model": ExceptionClass
+    },
+    403: {
+        "description": "Error: Forbidden",
+        "model": ExceptionClass
+    }
+}
+
+@apiRouter.post(CustomerRoutes.POST_ADD_CUSTOMER, response_model=Customer, responses=bad_request_responses | auth_responses)
+async def add_customer(customer: Customer = Depends(CustomerValidators.add_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
     set_org_model(customer, auth_result)
     logger.debug("In add_customer:" + str(customer))
-    customer_entity = add_customer_service.add_customer(customer)
-    return customer_entity
+    return CreateCustomerService.add_customer(customer, auth_result)
 
-@apiRouter.post(POST_DELETE_CUSTOMER, response_model=List[Customer])
-async def delete_customer(customer: Customer = Depends(valid_customer), auth_result: dict = Security(auth.verify)) -> List[Customer]:
+@apiRouter.put(CustomerRoutes.PUT_DEACTIVATE_CUSTOMERS, response_model=List[Customer], responses=auth_responses)
+async def deactivate_customers(customers: List[Customer] = Depends(CustomerValidators.list_id_validator), auth_result: Dict = Security(auth.verify)) -> List[Customer]:
+    set_org_multiple_model(customers, auth_result)
+    logger.debug("In deactivate_customers:" + str(customers))
+    UpdateCustomerService.deactivate_customers(customers)
+    return await get_all_customers(auth_result)
+
+@apiRouter.put(CustomerRoutes.PUT_RECOVER_CUSTOMERS, response_model=List[Customer], responses=auth_responses)
+async def recover_customers(customers: List[Customer] = Depends(CustomerValidators.list_id_validator), auth_result: Dict = Security(auth.verify)) -> List[Customer]:
+    set_org_multiple_model(customers, auth_result)
+    logger.debug("In recover_customers:" + str(customers))
+    UpdateCustomerService.recover_customers(customers)
+    return await get_all_customers(auth_result)
+
+@apiRouter.put(CustomerRoutes.PUT_CUST_ADDED_IN_TRANS, response_model=Customer, responses=bad_request_responses | auth_responses)
+async def cust_added_in_trans(customer: Customer = Depends(CustomerValidators.id_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
     set_org_model(customer, auth_result)
-    logger.debug("In delete_customer:" + str(customer))
-    del_customer_service.del_customer(customer)
-    customers = await get_customers(auth_result)
-    return customers
+    logger.debug("In cust_added_in_trans:" + str(customer))
+    return UpdateCustomerService.customer_in_transaction(customer, in_trans = 1)
 
-@apiRouter.get(GET_CUSTOMERS, response_model=List[Customer])
-async def get_customers(auth_result: dict = Security(auth.verify)) -> List[Customer]:
-    customer = set_org_model(Customer(), auth_result)
-    logger.debug("In get_customers:" + str(customer))
-    customers = get_customer_service.get_customers(customer)
-    return customers
-
-@apiRouter.get(GET_CUSTOMER, response_model=Optional[SingleEntity])
-async def get_customer(customer: Customer = Depends(valid_customer), auth_result: dict = Security(auth.verify)) -> Optional[SingleEntity]:
+@apiRouter.put(CustomerRoutes.PUT_CUST_DELETE_IN_TRANS, response_model=Customer, responses=bad_request_responses | auth_responses)
+async def cust_deleted_in_trans(customer: Customer = Depends(CustomerValidators.id_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
     set_org_model(customer, auth_result)
-    logger.debug("In get_customer: " + str(customer))
-    customer_entity = get_customer_service.get_customer(customer)
-    return customer_entity
+    logger.debug("In cust_deleted_in_trans:" + str(customer))
+    return UpdateCustomerService.customer_in_transaction(customer, in_trans = 0)
 
-# Link Broker
-@apiRouter.post("/add_link", response_model=Optional[SingleEntity])
-async def add_link(customer: Customer = Depends(add_link_customer_validator), broker: Broker = Depends(add_link_broker_validator), auth_result: dict = Security(auth.verify)) -> Optional[SingleEntity]:
+@apiRouter.get(CustomerRoutes.GET_CUSTOMER + "/{customer_id}", response_model=Customer, responses=bad_request_responses | auth_responses)
+async def get_customer(customer_id: int, auth_result: Dict = Security(auth.verify)) -> Customer:
+    customer : Customer = Customer(id = customer_id)
     set_org_model(customer, auth_result)
-    set_org_model(broker, auth_result)
-    logger.debug("In add_link Customer:" + str(customer) + " Broker: " + str(broker))
-    return link_service.add_link_cust_brok(customer, broker, get_customer=True)
+    logger.debug("In get_customer:" + str(customer))
+    return ReadCustomerService.get_customer(customer)
 
-@apiRouter.post("/del_link", response_model=Optional[SingleEntity])
-async def del_link(customer: Customer = Depends(del_link_customer_validator), broker: Broker = Depends(del_link_broker_validator), auth_result: dict = Security(auth.verify)) -> Optional[SingleEntity]:
-    set_org_model(customer, auth_result)
-    set_org_model(broker, auth_result)
-    logger.debug("In del_link Customer:" + str(customer) + " Broker: " + str(broker))
-    return link_service.del_link_cust_brok(customer, broker, get_customer=True)
+@apiRouter.get(CustomerRoutes.GET_ALL_CUSTOMERS, response_model=List[Customer], responses=auth_responses)
+async def get_all_customers(auth_result: Dict = Security(auth.verify)) -> List[Customer]:
+    customer : Customer = set_org_model(Customer(), auth_result)
+    logger.debug("In get_all_customers:" + str(customer))
+    return ReadCustomerService.get_all_customers(customer)
+
+@apiRouter.get(CustomerRoutes.GET_CUSTOMERS_LIST+"/", response_model=List[Optional[Customer]], responses=auth_responses)
+async def get_customers_list(customer_id: List[int] = Query([]), auth_result: Dict = Security(auth.verify)) -> List[Optional[Customer]]:
+    logger.debug("In get_customers_list:" + str(customer_id))
+    return ReadCustomerService.get_customers_list(auth_result[ORG], customer_id)
+
+@apiRouter.get(CustomerRoutes.GET_DELETED_CUSTOMERS, response_model=List[Customer], responses=auth_responses)
+async def get_deleted_customers(auth_result: Dict = Security(auth.verify)) -> List[Customer]:
+    customer : Customer = set_org_model(Customer(), auth_result)
+    logger.debug("In get_deleted_customers:" + str(customer))
+    return ReadCustomerService.get_deleted_customers(customer)
+
+@apiRouter.delete(CustomerRoutes.DELETE_CUSTOMERS, response_model=List[Customer], responses=auth_responses)
+async def delete_customers(customers: List[Customer] = Depends(CustomerValidators.list_id_validator), auth_result: Dict = Security(auth.verify)) -> List[Customer]:
+    set_org_multiple_model(customers, auth_result)
+    logger.debug("In delete_customers:" + str(customers))
+    DeleteCustomerService.delete_customers(customers)
+    return await get_deleted_customers(auth_result)
