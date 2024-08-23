@@ -44,6 +44,8 @@ class CustomerValidators:
                 customer.metaData = customer.metaData.strip()
                 if customer.metaData == "":
                     customer.metaData = None
+        customer.active = 1
+        customer.usedInTransaction = 0
     
     def add_validator(customer: Customer) -> Customer:
         CustomerValidators.sanitize(customer)
