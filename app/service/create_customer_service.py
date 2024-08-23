@@ -18,7 +18,4 @@ class CreateCustomerService:
             customer_entity: Customer = UpdateCustomerDB.update_customer(customer)
             if customer_entity is None:
                 raise InvalidBodyException(ID_NOT_FOUND)
-            if customer_entity.usedInTransaction == 1:
-                print(auth_result)
-                # TODO: Update this part
             return customer_entity
