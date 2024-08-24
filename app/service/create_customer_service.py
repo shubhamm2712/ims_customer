@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import requests
 
@@ -11,11 +11,11 @@ from ..models.models import Customer
 from ..database import CreateCustomerDB, UpdateCustomerDB
 
 class CreateCustomerService:
-    def add_customer(customer: Customer, auth_result: Dict) -> Customer:
+    def add_customer(customer: Customer) -> Customer:
         if customer.id is None:
             return CreateCustomerDB.add_customer(customer)
         else:
-            customer_entity: Customer = UpdateCustomerDB.update_customer(customer)
+            customer_entity: Optional[Customer] = UpdateCustomerDB.update_customer(customer)
             if customer_entity is None:
                 raise InvalidBodyException(ID_NOT_FOUND)
             return customer_entity

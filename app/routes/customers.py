@@ -37,7 +37,7 @@ auth_responses = {
 async def add_customer(customer: Customer = Depends(CustomerValidators.add_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
     set_org_model(customer, auth_result)
     logger.debug("In add_customer:" + str(customer))
-    return CreateCustomerService.add_customer(customer, auth_result)
+    return CreateCustomerService.add_customer(customer)
 
 @apiRouter.put(CustomerRoutes.PUT_DEACTIVATE_CUSTOMERS, response_model=List[Customer], responses=auth_responses)
 async def deactivate_customers(customers: List[Customer] = Depends(CustomerValidators.list_id_validator), auth_result: Dict = Security(auth.verify)) -> List[Customer]:

@@ -2,8 +2,6 @@ from sqlmodel import Session, select, update
 
 from typing import Optional, List
 
-from ..config.consts import ACTIVE_ID_NOT_FOUND
-
 from ..config import engine
 
 from ..models.models import Customer

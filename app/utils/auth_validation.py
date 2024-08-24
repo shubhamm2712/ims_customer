@@ -37,7 +37,6 @@ class VerifyToken:
                 audience=self.config.auth0_api_audience,
                 issuer=self.config.auth0_issuer,
             )
-            payload["token"] = token
         except Exception as error:
             raise UnauthorizedException(str(error))
         
