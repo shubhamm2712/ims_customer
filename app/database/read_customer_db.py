@@ -1,5 +1,4 @@
-
-from sqlmodel import Session, select, or_
+from sqlmodel import Session, select
 
 from typing import Optional, List
 
