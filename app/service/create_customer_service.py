@@ -1,7 +1,5 @@
 from typing import Dict, Optional
 
-import requests
-
 from ..config.consts import ID_NOT_FOUND
 
 from ..exceptions import InvalidBodyException
