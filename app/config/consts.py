@@ -25,6 +25,7 @@ LOG_FILE = "app/app.log"
 
 # Databases
 DB_ECHO = False
+DB_NAME = "imscustomer"
 
 # Service
 FLOATING_POINT_ERROR = 10e-4
