@@ -51,7 +51,7 @@ async def recover_customers(customers: List[Customer] = Depends(CustomerValidato
     set_org_multiple_model(customers, auth_result)
     logger.debug("In recover_customers:" + str(customers))
     UpdateCustomerService.recover_customers(customers)
-    return await get_all_customers(auth_result)
+    return await get_deleted_customers(auth_result)
 
 @apiRouter.put(CustomerRoutes.PUT_CUST_ADDED_IN_TRANS, response_model=Customer, responses=bad_request_responses | auth_responses)
 async def cust_added_in_trans(customer: Customer = Depends(CustomerValidators.id_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
