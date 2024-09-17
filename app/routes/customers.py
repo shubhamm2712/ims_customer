@@ -57,13 +57,13 @@ async def recover_customers(customers: List[Customer] = Depends(CustomerValidato
 async def cust_added_in_trans(customer: Customer = Depends(CustomerValidators.id_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
     set_org_model(customer, auth_result)
     logger.debug("In cust_added_in_trans:" + str(customer))
-    return UpdateCustomerService.customer_in_transaction(customer, in_trans = 1)
+    return UpdateCustomerService.customer_in_transaction(customer)
 
-@apiRouter.put(CustomerRoutes.PUT_CUST_DELETE_IN_TRANS, response_model=Customer, responses=bad_request_responses | auth_responses)
-async def cust_deleted_in_trans(customer: Customer = Depends(CustomerValidators.id_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
+@apiRouter.put(CustomerRoutes.PUT_CUST_ROLLBACK_IN_TRANS, response_model=Customer, responses=bad_request_responses | auth_responses)
+async def rollback_added_in_trans(customer: Customer = Depends(CustomerValidators.rollback_validator), auth_result: Dict = Security(auth.verify)) -> Customer:
     set_org_model(customer, auth_result)
-    logger.debug("In cust_deleted_in_trans:" + str(customer))
-    return UpdateCustomerService.customer_in_transaction(customer, in_trans = 0)
+    logger.debug("In rollback_added_in_trans:" + str(customer))
+    return UpdateCustomerService.customer_rollback_in_trans(customer)
 
 @apiRouter.get(CustomerRoutes.GET_CUSTOMER + "/{customer_id}", response_model=Customer, responses=bad_request_responses | auth_responses)
 async def get_customer(customer_id: int, auth_result: Dict = Security(auth.verify)) -> Customer:

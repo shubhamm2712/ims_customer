@@ -8,7 +8,7 @@ class CustomerRoutes:
     PUT_DEACTIVATE_CUSTOMERS = "/deactivate_customers"
     PUT_RECOVER_CUSTOMERS = "/recover_customers"
     PUT_CUST_ADDED_IN_TRANS = "/customer_add_in_transaction"
-    PUT_CUST_DELETE_IN_TRANS = "/customer_del_in_transaction"
+    PUT_CUST_ROLLBACK_IN_TRANS = "/customer_rollback_in_transaction"
 
     GET_ALL_CUSTOMERS = "/get_all_customers"
     GET_CUSTOMER = "/get_customer"
@@ -35,10 +35,12 @@ ORG_NOT_FOUND = "Org not found"
 ID_NOT_FOUND = "ID not found"
 ACTIVE_ID_NOT_FOUND = "Active ID not found"
 NAME_NOT_FOUND = "Name not found"
+USED_IN_TRANSACTION_NOT_FOUND = "usedInTransaction not found"
 INVALID_CUSTOMER_DETAILS_TYPE = "Invalid customer details type"
 CUSTOMER_DETAILS_MISSING = "Customer details are missing"
 CUSTOMER_DOES_NOT_EXIST = "Customer does not exist"
 CANNOT_BE_USED_IN_TRANSACTION = "Cannot be used in transaction"
+CANNOT_BE_ROLLBACKED_IN_TRANSACTION = "Cannot be rolled back in transaction"
 
 # MODEL
 ORG = "org"

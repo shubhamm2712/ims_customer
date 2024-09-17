@@ -1,6 +1,6 @@
 from typing import List
 
-from ..config.consts import NAME_NOT_FOUND, ID_NOT_FOUND, INVALID_CUSTOMER_DETAILS_TYPE
+from ..config.consts import NAME_NOT_FOUND, ID_NOT_FOUND, INVALID_CUSTOMER_DETAILS_TYPE, USED_IN_TRANSACTION_NOT_FOUND
 from ..models.models import Customer
 from ..exceptions import InvalidBodyException
 
@@ -44,13 +44,13 @@ class CustomerValidators:
                 customer.metaData = customer.metaData.strip()
                 if customer.metaData == "":
                     customer.metaData = None
-        customer.active = 1
-        customer.usedInTransaction = 0
     
     def add_validator(customer: Customer) -> Customer:
         CustomerValidators.sanitize(customer)
         if customer.name is None:
             raise InvalidBodyException(NAME_NOT_FOUND)
+        customer.active = 1
+        customer.usedInTransaction = 0
         return customer
     
     def id_validator(customer: Customer) -> Customer:
@@ -63,3 +63,11 @@ class CustomerValidators:
         for customer in customers:
             CustomerValidators.id_validator(customer)
         return customers
+    
+    def rollback_validator(customer: Customer) -> Customer:
+        CustomerValidators.id_validator(customer)
+        if customer.usedInTransaction is None or type(customer.usedInTransaction) != int:
+            raise InvalidBodyException(USED_IN_TRANSACTION_NOT_FOUND)
+        if customer.usedInTransaction != 0 and customer.usedInTransaction != 1:
+            raise InvalidBodyException(USED_IN_TRANSACTION_NOT_FOUND)
+        return customer

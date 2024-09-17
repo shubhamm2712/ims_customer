@@ -32,15 +32,31 @@ class UpdateCustomerDB:
             session.exec(statement)
             session.commit()
 
-    def update_customer_in_trans(customer: Customer, in_trans: int) -> Optional[Customer]:
+    def add_customer_in_trans(customer: Customer) -> Optional[Customer]:
         with Session(engine) as session:
             statement = select(Customer).where(Customer.id == customer.id, Customer.org == customer.org)
             results = session.exec(statement)
             db_customer = results.first()
             if db_customer is None:
                 return None
-            db_customer.usedInTransaction = in_trans
+            original_used_in_transaction = db_customer.usedInTransaction
+            db_customer.usedInTransaction = 1
             db_customer.active = 1
+            session.add(db_customer)
+            session.commit()
+            session.refresh(db_customer)
+            db_customer.usedInTransaction = original_used_in_transaction
+            return db_customer
+    
+    def rollback_customer_in_trans(customer: Customer) -> Optional[Customer]:
+        with Session(engine) as session:
+            statement = select(Customer).where(Customer.id == customer.id, Customer.org == customer.org)
+            results = session.exec(statement)
+            db_customer = results.first()
+            if db_customer is None:
+                return None
+            db_customer.active = 1
+            db_customer.usedInTransaction = customer.usedInTransaction
             session.add(db_customer)
             session.commit()
             session.refresh(db_customer)

@@ -12,8 +12,8 @@ class Customer(SQLModel, table=True):
     phone: Optional[str] = None
     taxNumber: Optional[str] = None
     metaData: Optional[str] = None
-    active: Optional[int] = 1
-    usedInTransaction: Optional[int] = 0
+    active: Optional[int] = None
+    usedInTransaction: Optional[int] = None
 
     def update_data(self, customer: "Customer") -> None:
         self.name = customer.name
