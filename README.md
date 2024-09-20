@@ -59,7 +59,7 @@ This microservice adheres to industry-standard coding practices, including:
 1. **Clone the repository:**
 
    ```bash
-   git clone <your-repo-url>
+   git clone <your forked version of this repo>
    cd ims_customer
    ```
 
